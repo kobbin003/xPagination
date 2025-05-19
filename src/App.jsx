@@ -4,6 +4,7 @@ import "./App.css";
 function App() {
 	const [employees, setEmployees] = useState([]);
 	const [offset, setOffset] = useState(0);
+	const [isLoading, setIsLoading] = useState(false);
 	const limit = 10;
 
 	const goPreviousoffset = () => {
@@ -20,6 +21,7 @@ function App() {
 	const currentPage = Math.floor(offset / 10) + 1;
 	useEffect(() => {
 		(async function () {
+			setIsLoading(true);
 			const url =
 				"https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json";
 
@@ -32,6 +34,8 @@ function App() {
 			} catch (error) {
 				console.error(error);
 				alert("failed to fetch data");
+			} finally {
+				setIsLoading(false);
 			}
 		})();
 	}, []);
@@ -39,32 +43,45 @@ function App() {
 	return (
 		<main>
 			<h1>Employee Data Table</h1>
-			<table>
-				<thead>
-					<tr>
-						<th align="left">ID</th>
-						<th align="left">Name</th>
-						<th align="left">Email</th>
-						<th align="left">Role</th>
-					</tr>
-				</thead>
-				<tbody>
-					{currentPageEmployees &&
-						currentPageEmployees.map(({ id, name, email, role }) => (
-							<tr key={id}>
-								<td>{id}</td>
-								<td>{name}</td>
-								<td>{email}</td>
-								<td>{role}</td>
+			{isLoading ? (
+				<p>Loading...</p>
+			) : (
+				<>
+					<table>
+						<thead>
+							<tr>
+								<th align="left">ID</th>
+								<th align="left">Name</th>
+								<th align="left">Email</th>
+								<th align="left">Role</th>
 							</tr>
-						))}
-				</tbody>
-			</table>
-			<div className="pagination-control">
-				<button onClick={goPreviousoffset}>Previous</button>
-				<div>{currentPage}</div>
-				<button onClick={goNextoffset}>Next</button>
-			</div>
+						</thead>
+						<tbody>
+							{currentPageEmployees &&
+								currentPageEmployees.map(({ id, name, email, role }) => (
+									<tr key={id}>
+										<td>{id}</td>
+										<td>{name}</td>
+										<td>{email}</td>
+										<td>{role}</td>
+									</tr>
+								))}
+						</tbody>
+					</table>
+					<div className="pagination-control">
+						<button onClick={goPreviousoffset} disabled={offset == 0}>
+							Previous
+						</button>
+						<div>{currentPage}</div>
+						<button
+							onClick={goNextoffset}
+							disabled={offset == Math.floor(employees.length / limit) * 10}
+						>
+							Next
+						</button>
+					</div>
+				</>
+			)}
 		</main>
 	);
 }
